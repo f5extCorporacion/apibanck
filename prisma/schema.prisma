@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+enum Role {
+  CAJA
+  ADMIN
+}
+
+enum Status {
+  ACTIVO
+  INACTIVO
+}
+
+model Users {
+  id         Int      @id @default(autoincrement())
+  name       String
+  cedula     String
+  email      String
+  phone      String
+  password   String
+  location   String
+  rol        Role     @default(CAJA)
+  status     Status   @default(ACTIVO)
+  created_at DateTime @default(now())
+  cuentaId   Cuenta[]
+}
+
+model Cuenta {
+  id           Int           @id @default(autoincrement())
+  numerocuenta String
+  usuario      Users         @relation(fields: [usuarioId], references: [id])
+  usuarioId    Int
+  dineroCuenta String
+  status       Status        @default(ACTIVO)
+  created_at   DateTime      @default(now())
+  transaccion  Transaccion[]
+  tarjeta      Tarjeta[]
+}
+
+model Tarjeta {
+  id            Int      @id @default(autoincrement())
+  numeroTarjeta String
+  pin           String
+  dineroTarjeta String
+  cv            String
+  cuenta        Cuenta   @relation(fields: [cuentaId], references: [id])
+  cuentaId      Int
+  status        Status   @default(ACTIVO)
+  created_at    DateTime @default(now())
+}
+
+model Transaccion {
+  id             Int      @id @default(autoincrement())
+  numerocuenta   String
+  dineroenviado  String
+  dinerorecibido String
+  cuenta         Cuenta   @relation(fields: [cuentaId], references: [id])
+  cuentaId       Int
+  status         Status   @default(ACTIVO)
+  created_at     DateTime @default(now())
+}

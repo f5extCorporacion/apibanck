@@ -1,0 +1,27 @@
+
+#instalaciones
+npm init -y
+->express
+->nodemon
+->bcrypt
+->cors
+->jwt
+->uuid
+->dotenv
+#ejecución
+npm install express nodemon bcrypt cors jsonwebtoken uuid
+npm install dotenv
+//#################################
+//DB base datos
+->prima
+> npm install prisma --save-dev
+npm i @prisma/client
+> npx prisma init
+
+5. Creación de la base de datos:
+Ejecuta el siguiente comando para crear la base de datos y las tablas según tu modelo:
+> npx prisma migrate dev
+
+6. Generación del cliente de Prisma:
+Finalmente, genera el cliente de Prisma para interactuar con tu base de datos:
+> npx prisma generate

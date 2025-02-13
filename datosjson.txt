@@ -1,0 +1,37 @@
+usuarios:
+{
+    "name":"franklim valverde",
+    "cedula":"1107050440",
+    "email":"1107050440f@gmail.com",
+    "phone":"3022130374",
+    "password":"Millonario2090*",
+    "location":"{-12346,579876}"
+}
+cuenta:
+{ "numerocuenta":"8897456321",
+ "usuarioId":1,
+   "dineroCuenta":"8000000" }
+
+   Tarjeta:
+    {
+      "numeroTarjeta":"8796543214",
+      "pin":"4535",
+      "dineroTarjeta":"30000000",
+      "cv":"4535",
+      "cuentaId":0,
+    };
+
+    //nueva creacion github
+    echo "# apibanck" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/f5extCorporacion/apibanck.git
+git push -u origin main
+
+actualizar
+…or push an existing repository from the command line
+git remote add origin https://github.com/f5extCorporacion/apibanck.git
+git branch -M main
+git push -u origin main
