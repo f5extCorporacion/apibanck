@@ -40,6 +40,8 @@ Este proyecto proporciona una API para la gestión de usuarios, cuentas y tarjet
 ### Usuarios
 - **GET** `/users` - Muestra los usuarios registrados.
 - **POST** `/users` - Crea un nuevo usuario.
+- **PUT** `/users/:id` - Actualiza el estado de un usuario (ACTIVO | INACTIVO).
+- **DELETE** `/users/:id` - Elimina un usuario.
 
 #### Modelo `Users`
 ```prisma
