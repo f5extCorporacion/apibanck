@@ -1,5 +1,7 @@
 import express from "express";
 import {
+  Actualizaestado,
+  EliminarUsuario,
   GETusers,
   POSTusers,
   POSTusersLogin,
@@ -17,6 +19,8 @@ export const routeglobal = express.Router();
 routeglobal.route("/").get(GETHome);
 //Routes de users
 routeglobal.route("/users").get(GETusers).post(POSTusers);
+//actualizar users  ACTIVO | INACTIVO
+routeglobal.route("/users/:id").put(Actualizaestado).delete(EliminarUsuario);
 //LOgin usuario
 routeglobal.route("/userLog").post(POSTusersLogin);
 //

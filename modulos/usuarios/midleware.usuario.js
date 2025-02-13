@@ -204,3 +204,43 @@ const saveToken = async (sha1, sha2, sha3) => {
     console.error("❌ Error en la operación:", error);
   }
 };
+//#############################################################
+//actualizar estado usuario
+export const Actualizaestado = async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    const usuarioActualizado = await prisma.users.update({
+      where: { id: parseInt(id) }, // Asegúrate de que el ID sea del tipo correcto
+      data: {
+        status: "INACTIVO",
+      },
+    });
+
+    res.status(200).json({ mensaje: "estado actualizado" });
+  } catch (error) {
+    console.error("Error al actualizar usuario:", error);
+    res.status(500).json({ mensaje: "No se pudo actualizar el usuario." });
+  }
+};
+//####################### Eliminar usuario ##########################
+export const EliminarUsuario = async (req, res, next) => {
+  const id = parseInt(req.params.id);
+
+  try {
+    const usuarioEliminado = await prisma.users.delete({
+      where: { id: id }, // Asegúrate de que el ID sea del tipo correcto
+    });
+
+    res.status(202).json({ mensaje: "eliminado" }); // 204 No Content: Indica éxito sin contenido en la respuesta
+  } catch (error) {
+    console.error("Error al eliminar usuario:", error);
+
+    if (error.code === "P2025") {
+      // Código de error de Prisma para "Record not found"
+      return res.status(404).json({ error: "Usuario no encontrado." });
+    }
+
+    res.status(500).json({ error: "No se pudo eliminar el usuario." });
+  }
+};

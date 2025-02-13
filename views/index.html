@@ -50,6 +50,9 @@
               <p class="mb-1">URL : http://localhost:3001/users  | GET => muestra los usuarios</p>
              
               <p class="mb-1">URL : http://localhost:3001/users  | POST  Crea los usuarios Los datos (rol,status,created_at ya estan predeterminados no enviar en post)</p>
+              
+              <p class="mb-1">URL : http://localhost:3001/users/1  | PUT  Enviar id usuario a actualizar y status = ACTIVO || INACTIVO (status,created_at ) </p>
+              <p class="mb-1">URL : http://localhost:3001/users/1  | DELETE Enviar id usuario a Eliminar y listo :) </p>
               <pre>
                 <code>model Users {
                   id         Int      @id @default(autoincrement())
