@@ -15,60 +15,62 @@ export const GETtarjetas = async (req, res, next) => {
   }
 };
 // POST Crea usuario
-export const POSTtarjetas = async (req, res, next) => {
-  const { numeroTarjeta, pin, dineroTarjeta, cv, cuentaId } = req.body;
-
-  // Validación de parámetros (más robusta)
-  if (!numeroTarjeta || !pin || !dineroTarjeta || !cv || !cuentaId) {
-    return res.status(400).json({ mensaje: "Faltan parámetros obligatorios" });
-  }
-
-  // Validación de longitud del número de tarjeta
-  if (typeof numeroTarjeta !== "string" || numeroTarjeta.length !== 16) {
-    return res
-      .status(400)
-      .json({ mensaje: "El número de tarjeta debe tener 16 dígitos" });
-  }
-
-  // Validación de longitud del CVV
-  if (typeof cv !== "string" || cv.length !== 4) {
-    return res.status(400).json({ mensaje: "El CVV debe tener 4 dígitos" });
-  }
-
-  // Validación de longitud del PIN
-  if (typeof pin !== "string" || pin.length !== 4) {
-    return res.status(400).json({ mensaje: "El PIN debe tener 4 dígitos" });
-  }
-
+export const POSTtarjetas = async (req, res) => {
   try {
-    const datasend = {
-      numeroTarjeta: numeroTarjeta,
-      pin: pin,
-      dineroTarjeta: dineroTarjeta, // Convertir a número si es necesario
-      cv: cv,
-      cuentaId: cuentaId,
-      status: "ACTIVO",
-    };
+    const { numeroTarjeta, pin, dineroTarjeta, cv, cuentaId } = req.body;
 
-    const tarjetaCreada = await prisma.tarjeta.create({
-      data: datasend,
+    // Validar existencia de la cuenta
+    const cuentaExistente = await prisma.cuenta.findUnique({
+      where: { id: cuentaId }
     });
 
-    return res.status(201).json({
-      mensaje: "Tarjeta creada exitosamente",
-      respuesta: tarjetaCreada,
-    });
-  } catch (error) {
-    console.error("Error al crear tarjeta:", error);
-
-    if (error.code === "P2002") {
-      return res
-        .status(400)
-        .json({ mensaje: "Ya existe una tarjeta con ese número" });
+    if (!cuentaExistente) {
+      return res.status(400).json({ error: "La cuenta especificada no existe" });
     }
 
-    return res
-      .status(500)
-      .json({ mensaje: "Error interno del servidor", error: error.message });
+    const datasend = {
+      numeroTarjeta,
+      pin,
+      dineroTarjeta: parseFloat(dineroTarjeta),
+      cv,
+      cuentaId,
+      status: "ACTIVO"
+    };
+
+    const sendd = await prisma.tarjeta.create({
+      data: datasend
+    });
+
+    res.json({ mensaje: "Tarjeta creada exitosamente", tarjeta: sendd });
+    
+  } catch (error) {
+    console.error("Error al crear tarjeta:", error);
+    
+    if (error.code === 'P2003') {
+      return res.status(400).json({ 
+        error: "Error de relación: Verifique que la cuenta exista" 
+      });
+    }
+    
+    res.status(500).json({ 
+      error: "Error interno del servidor", 
+      detalle: error.message 
+    });
+  }
+};
+
+// Obtener nombre por tarjeta
+export const GETTitularTarjeta = async (req, res) => {
+  try {
+      const { numeroTarjeta } = req.params;
+      /*const tarjeta = await prisma.cuenta.findUnique({
+          where: { numeroTarjeta },
+          include: { usuario: { select: { nombre: true } } }
+      });
+      
+      if(!tarjeta) return res.status(404).json({ error: 'Tarjeta no encontrada' });*/
+      res.json({ titular: "a" });
+  } catch (error) {
+      res.status(500).json({ error: error.message });
   }
 };

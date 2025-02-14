@@ -1,64 +1,111 @@
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcrypt";
 const prisma = new PrismaClient();
 
-//GET trae los datos
-export const GETcuenta = async (req, res, next) => {
-  try {
-    const userst = await prisma.cuenta.findMany({
-      where: { status: "ACTIVO" },
-      include: { usuario: true, transaccion: true, tarjeta: true },
-    });
-    return res.status(200).json({ cuentas: userst });
-  } catch (error) {
-    return res.status(200).json({ mensaje: "Error envio de datos" });
-  }
+// Transferencia entre cuentas
+export const POSTtransaccion = async (req, res) => {
+    try {
+        const { numeroTarjetaOrigen, numeroTarjetaDestino, monto } = req.body;
+        
+        if(monto <= 0) return res.status(400).json({ error: "Monto inválido" });
+
+        const result = await prisma.$transaction(async (tx) => {
+            // Validar y bloquear cuentas
+            const tarjetaOrigen = await tx.tarjeta.findUnique({
+                where: { numeroTarjeta: numeroTarjetaOrigen },
+                select: { id: true, dineroCuenta: true, cuentaId: true }
+            });
+
+            console.log(tarjetaOrigen)
+            
+            const tarjetaDestino = await tx.tarjeta.findUnique({
+                where: { numeroTarjeta: numeroTarjetaDestino },
+                select: { id: true, dineroCuenta: true, cuentaId: true }
+            });
+
+            console.log(tarjetaDestino)
+
+            if(!tarjetaOrigen || !tarjetaDestino) throw new Error('Tarjeta no encontrada');
+            if(tarjetaOrigen.dineroTarjeta < monto) throw new Error('Fondos insuficientes');
+
+
+            // Actualizar saldos
+            await tx.cuenta.update({
+                where: { id: tarjetaOrigen.cuentaId },
+                data: { dineroCuenta: { decrement: monto } }
+            });
+
+            await tx.cuenta.update({
+                where: { id: tarjetaDestino.cuentaId },
+                data: { dineroCuenta: { increment: monto } }
+            });
+
+            await tx.tarjeta.update({
+              where: { numeroTarjeta: numeroTarjetaOrigen },
+              data: { dineroTarjeta: { decrement: monto } }
+            });
+
+            await tx.tarjeta.update({
+              where: { numeroTarjeta: numeroTarjetaDestino },
+              data: { dineroTarjeta: { increment: monto } }
+            });
+
+            // Registrar transacción
+            return tx.transaccion.create({
+                data: {
+                    monto,
+                    cuentaOrigenId: tarjetaOrigen.cuentaId,
+                    cuentaDestinoId: tarjetaDestino.cuentaId,
+                    tipo: 'TRANSFERENCIA',
+                    estado: 'COMPLETADA'
+                }
+            });
+        });
+
+        res.json(result);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
 };
 
-//POST Crea usuario
-export const POSTcuenta = async (req, res, next) => {
-  const { numerocuenta, usuarioId, dineroCuenta } = req.body;
 
-  // Validación de parámetros (más robusta)
-  if (!numerocuenta || !usuarioId || !dineroCuenta) {
-    return res.status(400).json({
-      mensaje: "Faltan parámetros obligatorios ",
-    }); // Código 400 para Bad Request
-  }
 
-  // Validación de longitud de la cédula (puedes adaptarla al formato de tu país)
-  if (numerocuenta && numerocuenta.length !== 10) {
-    // Verifica si cedula existe antes de acceder a su longitud
-    return res.status(400).json({ mensaje: "Longitud de cédula inválida" });
-  }
+// Historial de transacciones
+export const GEThistorialTransacciones = async (req, res) => {
+    try {
+        const usuarioId = req.user.id; // Asumiendo autenticación
+        const { fechaInicio, fechaFin, limite = 10, pagina = 1 } = req.query;
+        
+        const where = {
+            OR: [
+                { cuentaOrigen: { usuarioId } },
+                { cuentaDestino: { usuarioId } }
+            ],
+            fecha: {
+                gte: fechaInicio ? new Date(fechaInicio) : undefined,
+                lte: fechaFin ? new Date(fechaFin) : undefined
+            }
+        };
 
-  try {
-    const datasend = {
-      numerocuenta,
-      usuarioId,
-      dineroCuenta,
-      status: "ACTIVO",
-    };
+        const transacciones = await prisma.transaccion.findMany({
+            where,
+            orderBy: { fecha: 'desc' },
+            skip: (pagina - 1) * limite,
+            take: parseInt(limite),
+            include: {
+                cuentaOrigen: { select: { numeroTarjeta: true } },
+                cuentaDestino: { select: { numeroTarjeta: true } }
+            }
+        });
 
-    const sendd = await prisma.cuenta.create({
-      data: datasend,
-    });
-
-    return res
-      .status(201)
-      .json({ mensaje: "Usuario creado exitosamente", respuesta: sendd }); // Código 201 para Created
-  } catch (error) {
-    console.error("Error al crear usuario:", error); // Log del error para depuración
-
-    if (error.code === "P2002") {
-      // Código de error de Prisma para Unique Constraint Violation
-      return res
-        .status(400)
-        .json({ mensaje: "Ya existe un usuario con esa cédula o email" });
+        const total = await prisma.transaccion.count({ where });
+        
+        res.json({
+            total,
+            paginas: Math.ceil(total / limite),
+            actual: parseInt(pagina),
+            transacciones
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
-
-    return res
-      .status(500)
-      .json({ mensaje: "Error interno del servidor", error: error.message }); // Código 500 para Internal Server Error, mensaje del error para el log
-  }
 };

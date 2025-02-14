@@ -12,7 +12,9 @@ import { GETcuenta, POSTcuenta } from "../modulos/cuenta/midleware.cuenta.js";
 import {
   GETtarjetas,
   POSTtarjetas,
+  GETTitularTarjeta
 } from "../modulos/tarjetas/midleware.tarjeta.js";
+import { GEThistorialTransacciones, POSTtransaccion } from "../modulos/transacciones/midleware.transacion.js";
 import { GETHome } from "../modulos/home/index.js";
 export const routeglobal = express.Router();
 
@@ -28,5 +30,6 @@ routeglobal.route("/protected").get(verifyToken, protegida);
 //Routes de cuenta
 routeglobal.route("/cuenta").get(GETcuenta).post(POSTcuenta);
 //Routes tarjetas
-routeglobal.route("/tarjetas").get(GETtarjetas).post(POSTtarjetas);
+routeglobal.route("/tarjetas").get(GETtarjetas).get(GETTitularTarjeta).post(POSTtarjetas);
 //Routes Transaccion
+routeglobal.route("/transaccion").get(GEThistorialTransacciones).post(POSTtransaccion);
