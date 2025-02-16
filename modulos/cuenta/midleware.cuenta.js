@@ -3,15 +3,44 @@ import bcrypt from "bcrypt";
 const prisma = new PrismaClient();
 
 //GET trae los datos
-export const GETcuenta = async (req, res, next) => {
+export const GETcuentas = async (req, res, next) => {
   try {
     const userst = await prisma.cuenta.findMany({
       where: { status: "ACTIVO" },
-      include: { usuario: true, transaccion: true, tarjeta: true },
+      include: { usuario: true, transaccionesOrigen: true, transaccionesDestino: true, tarjeta: true },
     });
     return res.status(200).json({ cuentas: userst });
   } catch (error) {
     return res.status(200).json({ mensaje: "Error envio de datos" });
+  }
+};
+
+export const GETcuenta = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    if (isNaN(Number(id))) {
+      return res.status(400).json({ error: 'ID de cuenta no válido' });
+    }
+
+    // Buscar la cuenta con sus transacciones
+    const cuenta = await prisma.cuenta.findUnique({
+      where: { id: Number(id) },
+      include: {
+        transaccionesOrigen: true, // Transacciones donde la cuenta es origen
+        transaccionesDestino: true // Transacciones donde la cuenta es destino
+      }
+    });
+
+    // Si la cuenta no existe
+    if (!cuenta) {
+      return res.status(404).json({ error: 'Cuenta no encontrada' });
+    }
+
+    res.json(cuenta);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al obtener las transacciones de la cuenta' });
   }
 };
 

@@ -45,8 +45,9 @@ model Cuenta {
   dineroCuenta  Float   @default(0)
   status        Status   @default(ACTIVO)
   created_at    DateTime @default(now())
-  transaccion  Transaccion[]
   tarjeta      Tarjeta[]
+  transaccionesOrigen  Transaccion[] @relation("TransaccionesOrigen")
+  transaccionesDestino Transaccion[] @relation("TransaccionesDestino")
 }
 
 model Tarjeta {
@@ -69,8 +70,8 @@ model Transaccion {
   cuentaDestinoId Int
   tipo            String   // TRANSFERENCIA, DEPOSITO, etc.
   estado          String   @default("COMPLETADA") // o "FALLIDA"
-  cuenta         Cuenta   @relation(fields: [cuentaId], references: [id])
-  cuentaId       Int
-  status         Status   @default(ACTIVO)
+  
+  cuentaOrigen  Cuenta @relation("TransaccionesOrigen", fields: [cuentaOrigenId], references: [id])
+  cuentaDestino Cuenta @relation("TransaccionesDestino", fields: [cuentaDestinoId], references: [id])
   created_at     DateTime @default(now())
 }
