@@ -38,22 +38,23 @@ model Users {
 }
 
 model Cuenta {
-  id           Int           @id @default(autoincrement())
-  numerocuenta String
-  usuario      Users         @relation(fields: [usuarioId], references: [id])
-  usuarioId    Int
-  dineroCuenta String
-  status       Status        @default(ACTIVO)
-  created_at   DateTime      @default(now())
-  transaccion  Transaccion[]
+  id            Int     @id @default(autoincrement())
+  usuarioId     Int
+  usuario       Users     @relation(fields: [usuarioId], references: [id])
+  numerocuenta String 
+  dineroCuenta  Float   @default(0)
+  status        Status   @default(ACTIVO)
+  created_at    DateTime @default(now())
   tarjeta      Tarjeta[]
+  transaccionesOrigen  Transaccion[] @relation("TransaccionesOrigen")
+  transaccionesDestino Transaccion[] @relation("TransaccionesDestino")
 }
 
 model Tarjeta {
   id            Int      @id @default(autoincrement())
-  numeroTarjeta String
+  numeroTarjeta String  @unique
   pin           String
-  dineroTarjeta String
+  dineroTarjeta Float   @default(0)
   cv            String
   cuenta        Cuenta   @relation(fields: [cuentaId], references: [id])
   cuentaId      Int
@@ -62,12 +63,15 @@ model Tarjeta {
 }
 
 model Transaccion {
-  id             Int      @id @default(autoincrement())
-  numerocuenta   String
-  dineroenviado  String
-  dinerorecibido String
-  cuenta         Cuenta   @relation(fields: [cuentaId], references: [id])
-  cuentaId       Int
-  status         Status   @default(ACTIVO)
+  id              Int      @id @default(autoincrement())
+  fecha           DateTime @default(now())
+  monto           Float
+  cuentaOrigenId  Int
+  cuentaDestinoId Int
+  tipo            String   // TRANSFERENCIA, DEPOSITO, etc.
+  estado          String   @default("COMPLETADA") // o "FALLIDA"
+  
+  cuentaOrigen  Cuenta @relation("TransaccionesOrigen", fields: [cuentaOrigenId], references: [id])
+  cuentaDestino Cuenta @relation("TransaccionesDestino", fields: [cuentaDestinoId], references: [id])
   created_at     DateTime @default(now())
 }

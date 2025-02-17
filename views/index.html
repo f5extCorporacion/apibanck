@@ -99,7 +99,7 @@
        </CODE>
       </pre>
             </a>
-            <a href="#" class="list-group-item list-group-item-action 	list-group-item-primary">
+            <a href="#" class="list-group-item list-group-item-action 	">
               <div class="d-flex w-100 justify-content-between 	">
                 <h5 class="mb-1">Cuenta</h5>
              
@@ -113,18 +113,19 @@
                 tipo de dato (int)
               </p>
               <pre>
-                <strong> tipos de dato</strong>
+                <strong>Modelo Cuenta</strong>
                 <code>
                   model Cuenta {
-                    id           Int           @id @default(autoincrement())
-                    numerocuenta String
-                    usuario      Users         @relation(fields: [usuarioId], references: [id])
-                    usuarioId    Int
-                    dineroCuenta String
-                    status       Status        @default(ACTIVO)
-                    created_at   DateTime      @default(now())
-                    transaccion  Transaccion[]
-                    tarjeta      Tarjeta[]
+                    id              Int          @id @default(autoincrement())
+                    numerocuenta    String
+                    usuario         Users        @relation(fields: [usuarioId], references: [id])
+                    usuarioId       Int
+                    dineroCuenta    String
+                    status          Status       @default(ACTIVO)
+                    created_at      DateTime     @default(now())
+                    transaccionesOrigen  Transaccion[] @relation("TransaccionesOrigen")
+                    transaccionesDestino Transaccion[] @relation("TransaccionesDestino")
+                    tarjeta         Tarjeta[]
                   }
                 </code>
                 <strong>Datos a enviar por POST</strong>
@@ -193,8 +194,92 @@
               </CODE>
              </pre>
             </a>
-          </div>
 
+            <a href="#" class="list-group-item list-group-item-action">
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">Transacciones</h5>
+                <small class="text-body-secondary">3 days ago</small>
+              </div>
+            
+              <!-- Endpoint: Crear una transacción -->
+              <p class="mb-1">URL : http://localhost:3001/transaccion | POST => Crea una transacción</p>
+              <pre>
+                <strong>Modelo Transaccion</strong>
+                <code>
+                  model Transaccion {
+                    id              Int      @id @default(autoincrement())
+                    fecha           DateTime @default(now())
+                    monto           Float
+                    cuentaOrigenId  Int
+                    cuentaDestinoId Int
+                    tipo            String   // TRANSFERENCIA, DEPOSITO, RETIRO, etc.
+                    estado          String   @default("COMPLETADA") // o "FALLIDA"
+                    cuentaOrigen    Cuenta   @relation("TransaccionesOrigen", fields: [cuentaOrigenId], references: [id])
+                    cuentaDestino   Cuenta   @relation("TransaccionesDestino", fields: [cuentaDestinoId], references: [id])
+                  }
+                </code>
+                <strong>Datos a enviar por POST</strong>
+                <code>
+                  {
+                    "numeroTarjetaOrigen": "8877441142787847",
+                    "numeroTarjetaDestino": "1877441142787847",
+                    "monto": 200
+                  }
+                </code>
+              </pre>
+            
+              <!-- Endpoint: Obtener historial de transacciones de una cuenta -->
+              <p class="mb-1">URL : http://localhost:3001/cuenta/:id/transacciones | GET => Muestra el historial de transacciones de una cuenta</p>
+              <pre>
+                <strong>Respuesta esperada</strong>
+                <code>
+                  {
+                    "id": 1,
+                    "dineroCuenta": 1000,
+                    "transaccionesOrigen": [
+                      {
+                        "id": 1,
+                        "fecha": "2023-10-10T12:00:00.000Z",
+                        "monto": 200,
+                        "cuentaOrigenId": 1,
+                        "cuentaDestinoId": 2,
+                        "tipo": "TRANSFERENCIA",
+                        "estado": "COMPLETADA"
+                      }
+                    ],
+                    "transaccionesDestino": [
+                      {
+                        "id": 2,
+                        "fecha": "2023-10-09T14:30:00.000Z",
+                        "monto": 100,
+                        "cuentaOrigenId": 3,
+                        "cuentaDestinoId": 1,
+                        "tipo": "TRANSFERENCIA",
+                        "estado": "COMPLETADA"
+                      }
+                    ]
+                  }
+                </code>
+              </pre>
+              <p class="mb-1">URL : http://localhost:3001/cuenta/:id | GET => Muestra los detalles de una cuenta</p>
+              <pre>
+                <strong>Respuesta esperada</strong>
+                <code>
+                  {
+                    "id": 1,
+                    "numerocuenta": "8897456321",
+                    "usuarioId": 1,
+                    "dineroCuenta": "8000000",
+                    "status": "ACTIVO",
+                    "created_at": "2023-10-10T12:00:00.000Z",
+                    "transaccion": [],
+                    "tarjeta": []
+                  }
+                </code>
+              </pre>
+            </a>
+          </div>
+        </div>
           <br>
 
           <div class="card text-bg-primary mb-3" >
@@ -203,7 +288,6 @@
           </div>
         
         </div>
-
       </div>
 </body>
 </html>
