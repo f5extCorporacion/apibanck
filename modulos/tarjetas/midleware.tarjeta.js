@@ -19,6 +19,13 @@ export const POSTtarjetas = async (req, res) => {
   try {
     const { numeroTarjeta, pin, dineroTarjeta, cv, cuentaId } = req.body;
 
+
+    // Validación de parámetros (más robusta)
+    if (!numeroTarjeta || !pin || !dineroTarjeta || !cv || !cuentaId) {
+      return res.status(400).json({
+        mensaje: "Faltan parámetros obligatorios ",
+      }); // Código 400 para Bad Request
+    }
     // Validar existencia de la cuenta
     const cuentaExistente = await prisma.cuenta.findUnique({
       where: { id: cuentaId }
@@ -62,15 +69,40 @@ export const POSTtarjetas = async (req, res) => {
 // Obtener nombre por tarjeta
 export const GETTitularTarjeta = async (req, res) => {
   try {
-      const { numeroTarjeta } = req.params;
-      /*const tarjeta = await prisma.cuenta.findUnique({
-          where: { numeroTarjeta },
-          include: { usuario: { select: { nombre: true } } }
-      });
-      
-      if(!tarjeta) return res.status(404).json({ error: 'Tarjeta no encontrada' });*/
-      res.json({ titular: "a" });
+    const { numeroTarjeta } = req.params;
+    
+    const tarjeta = await prisma.tarjeta.findUnique({
+      where: { 
+        numeroTarjeta: numeroTarjeta 
+      },
+      include: {
+        cuenta: {
+          include: {
+            usuario: {
+              select: {
+                name: true
+              }
+            }
+          }
+        }
+      }
+    });
+    
+    if (!tarjeta) {
+      return res.status(404).json({ error: 'Tarjeta no encontrada' });
+    }
+
+    if (!tarjeta.cuenta || !tarjeta.cuenta.usuario) {
+      return res.status(404).json({ error: 'Información del titular no disponible' });
+    }
+
+    res.json({ 
+      titular: tarjeta.cuenta.usuario.name,
+      numeroTarjeta: tarjeta.numeroTarjeta
+    });
+
   } catch (error) {
-      res.status(500).json({ error: error.message });
+    console.error('Error al buscar titular:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 };

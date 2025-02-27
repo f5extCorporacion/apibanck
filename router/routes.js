@@ -35,6 +35,8 @@ routeglobal.route("/cuenta/:id").get(GETcuenta)
 //traer historial de transacciones
 routeglobal.route("/cuenta/:id/transacciones").get(GEThistorialTransacciones)
 //Routes tarjetas
-routeglobal.route("/tarjetas").get(GETtarjetas).get(GETTitularTarjeta).post(POSTtarjetas);
+routeglobal.route("/tarjetas").get(GETtarjetas).post(POSTtarjetas);
+//Routes tarjetas
+routeglobal.route("/tarjetas/:numeroTarjeta").get(GETTitularTarjeta)
 //Routes Transaccion
 routeglobal.route("/transaccion").get(GEThistorialTransacciones).post(POSTtransaccion);
