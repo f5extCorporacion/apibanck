@@ -14,29 +14,25 @@ import {
   POSTtarjetas,
   GETTitularTarjeta
 } from "../modulos/tarjetas/midleware.tarjeta.js";
-import { GEThistorialTransacciones, POSTtransaccion } from "../modulos/transacciones/midleware.transacion.js";
+import { GEThistorialTransacciones, POSTtransaccion } from "../modulos/transacciones/midleware.transaccion.js";
 import { GETHome } from "../modulos/home/index.js";
+import { validateAccountCreation, validateCardCreation } from '../middlewares/validationMiddleware.js';
+
 export const routeglobal = express.Router();
 
 routeglobal.route("/").get(GETHome);
 //Routes de users
 routeglobal.route("/users").get(GETusers).post(POSTusers);
-//actualizar users  ACTIVO | INACTIVO
 routeglobal.route("/users/:id").put(Actualizaestado).delete(EliminarUsuario);
-//LOgin usuario
 routeglobal.route("/userLog").post(POSTusersLogin);
-//
 routeglobal.route("/protected").get(verifyToken, protegida);
-//Routes de cuenta
-routeglobal.route("/cuenta").get(GETcuentas).post(POSTcuenta);
 
-//treaer cuenta por id
-routeglobal.route("/cuenta/:id").get(GETcuenta)
-//traer historial de transacciones
-routeglobal.route("/cuenta/:id/transacciones").get(GEThistorialTransacciones)
-//Routes tarjetas
-routeglobal.route("/tarjetas").get(GETtarjetas).post(POSTtarjetas);
-//Routes tarjetas
-routeglobal.route("/tarjetas/:numeroTarjeta").get(GETTitularTarjeta)
-//Routes Transaccion
+//Routes with validation
+routeglobal.route("/cuenta").get(GETcuentas).post(validateAccountCreation, POSTcuenta);
+routeglobal.route("/cuenta/:id").get(GETcuenta);
+routeglobal.route("/cuenta/:id/transacciones").get(GEThistorialTransacciones);
+
+routeglobal.route("/tarjetas").get(GETtarjetas).post(validateCardCreation, POSTtarjetas);
+routeglobal.route("/tarjetas/:numeroTarjeta").get(GETTitularTarjeta);
+
 routeglobal.route("/transaccion").get(GEThistorialTransacciones).post(POSTtransaccion);

@@ -19,36 +19,70 @@ export const POSTtarjetas = async (req, res) => {
   try {
     const { numeroTarjeta, pin, dineroTarjeta, cv, cuentaId } = req.body;
 
-
     // Validación de parámetros (más robusta)
-    if (!numeroTarjeta || !pin || !dineroTarjeta || !cv || !cuentaId) {
+    if (!numeroTarjeta || !pin || !cv || !cuentaId) {
       return res.status(400).json({
-        mensaje: "Faltan parámetros obligatorios ",
-      }); // Código 400 para Bad Request
+        mensaje: "Faltan parámetros obligatorios: numeroTarjeta, pin, cv, cuentaId",
+      });
     }
-    // Validar existencia de la cuenta
+
+    // Validar y convertir dineroTarjeta
+    const saldoInicial = dineroTarjeta ? parseFloat(dineroTarjeta) : 0;
+    if (isNaN(saldoInicial) || saldoInicial < 0) {
+      return res.status(400).json({
+        mensaje: "El saldo inicial debe ser un número válido y no negativo",
+      });
+    }
+
+    // Validar existencia de la cuenta y su saldo
     const cuentaExistente = await prisma.cuenta.findUnique({
-      where: { id: cuentaId }
+      where: { id: Number(cuentaId) }
     });
 
     if (!cuentaExistente) {
       return res.status(400).json({ error: "La cuenta especificada no existe" });
     }
 
+    if (saldoInicial > cuentaExistente.dineroCuenta) {
+      return res.status(400).json({ 
+        error: "El saldo inicial de la tarjeta no puede ser mayor al saldo de la cuenta" 
+      });
+    }
+
     const datasend = {
       numeroTarjeta,
       pin,
-      dineroTarjeta: parseFloat(dineroTarjeta),
+      dineroTarjeta: saldoInicial,
       cv,
-      cuentaId,
+      cuentaId: Number(cuentaId),
       status: "ACTIVO"
     };
 
-    const sendd = await prisma.tarjeta.create({
-      data: datasend
+    // Crear tarjeta y actualizar saldo de la cuenta en una transacción
+    const result = await prisma.$transaction(async (tx) => {
+      const tarjeta = await tx.tarjeta.create({
+        data: datasend
+      });
+
+      if (saldoInicial > 0) {
+        await tx.cuenta.update({
+          where: { id: Number(cuentaId) },
+          data: {
+            dineroCuenta: {
+              decrement: saldoInicial
+            }
+          }
+        });
+      }
+
+      return tarjeta;
     });
 
-    res.json({ mensaje: "Tarjeta creada exitosamente", tarjeta: sendd });
+    res.json({ 
+      mensaje: "Tarjeta creada exitosamente", 
+      tarjeta: result,
+      saldoCuenta: cuentaExistente.dineroCuenta - saldoInicial
+    });
     
   } catch (error) {
     console.error("Error al crear tarjeta:", error);
