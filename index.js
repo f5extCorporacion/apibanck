@@ -1,13 +1,8 @@
 import * as dotenv from "dotenv";
-dotenv.config();
 import express from "express";
-import cors from "cors";
+dotenv.config();
 import { routeglobal } from "./router/routes.js";
-import path from "path";
-import { fileURLToPath } from "url";
-
-// Import the cors package
-const cors = require('cors');
+import cors from 'cors';
 
 const app = express();
 const port = process.env.PORT || 3001;
