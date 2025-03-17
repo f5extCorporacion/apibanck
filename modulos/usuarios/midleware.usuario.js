@@ -244,3 +244,45 @@ export const EliminarUsuario = async (req, res, next) => {
     res.status(500).json({ error: "No se pudo eliminar el usuario." });
   }
 };
+
+// Obtener un usuario por ID
+export const GETuserById = async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    
+    if (isNaN(userId)) {
+      return res.status(400).json({ mensaje: "ID de usuario inválido" });
+    }
+    
+    const user = await prisma.users.findUnique({
+      where: { 
+        id: userId,
+        status: "ACTIVO" 
+      },
+      include: {
+        cuentaId: {
+          include: {
+            tarjeta: true,
+            transaccionesOrigen: true,
+            transaccionesDestino: true
+          }
+        }
+      }
+    });
+    
+    if (!user) {
+      return res.status(404).json({ mensaje: "Usuario no encontrado" });
+    }
+    
+    // Omitir la contraseña en la respuesta por seguridad
+    const { password, ...userWithoutPassword } = user;
+    
+    return res.status(200).json({ usuario: userWithoutPassword });
+  } catch (error) {
+    console.error("Error al obtener usuario por ID:", error);
+    return res.status(500).json({ 
+      mensaje: "Error al obtener información del usuario",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};

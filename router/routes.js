@@ -2,6 +2,7 @@ import express from "express";
 import {
   Actualizaestado,
   EliminarUsuario,
+  GETuserById,
   GETusers,
   POSTusers,
   POSTusersLogin,
@@ -23,7 +24,7 @@ export const routeglobal = express.Router();
 routeglobal.route("/").get(GETHome);
 //Routes de users
 routeglobal.route("/users").get(GETusers).post(POSTusers);
-routeglobal.route("/users/:id").put(Actualizaestado).delete(EliminarUsuario);
+routeglobal.route("/users/:id").get(GETuserById).put(Actualizaestado).delete(EliminarUsuario);
 routeglobal.route("/userLog").post(POSTusersLogin);
 routeglobal.route("/protected").get(verifyToken, protegida);
 
