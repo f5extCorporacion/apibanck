@@ -256,3 +256,72 @@ export const GEThistorialTransacciones = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 }
+
+// Obtener todas las transacciones del sistema
+export const GETallTransacciones = async (req, res) => {
+    try {
+        const { fechaInicio, fechaFin, limite = 10, pagina = 1 } = req.query;
+
+        // Establecer fechas predeterminadas si no se proporcionan
+        const hoy = new Date();
+        const dosMesesAtras = new Date();
+        dosMesesAtras.setMonth(hoy.getMonth() - 2);
+
+        const fechaInicioDefault = fechaInicio ? new Date(fechaInicio) : dosMesesAtras;
+        const fechaFinDefault = fechaFin ? new Date(fechaFin) : hoy;
+
+        const where = {
+            fecha: {
+                gte: fechaInicioDefault,
+                lte: fechaFinDefault
+            }
+        };
+
+        // Obtener todas las transacciones con paginación
+        const transacciones = await prisma.transaccion.findMany({
+            where,
+            orderBy: { fecha: 'desc' },
+            skip: (pagina - 1) * parseInt(limite),
+            take: parseInt(limite),
+            include: {
+                cuentaOrigen: { 
+                    select: { 
+                        numerocuenta: true,
+                        usuario: {
+                            select: {
+                                name: true,
+                                email: true
+                            }
+                        }
+                    } 
+                },
+                cuentaDestino: { 
+                    select: { 
+                        numerocuenta: true,
+                        usuario: {
+                            select: {
+                                name: true,
+                                email: true
+                            }
+                        }
+                    } 
+                }
+            }
+        });
+
+        const total = await prisma.transaccion.count({ where });
+
+        res.json({
+            total,
+            paginas: Math.ceil(total / limite),
+            actual: parseInt(pagina),
+            transacciones
+        });
+    } catch (error) {
+        console.error('Error al obtener todas las transacciones:', error);
+        res.status(500).json({ 
+            error: 'Error al obtener las transacciones',
+            detalles: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};

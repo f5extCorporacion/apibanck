@@ -14,7 +14,7 @@ import {
   POSTtarjetas,
   GETTitularTarjeta
 } from "../modulos/tarjetas/midleware.tarjeta.js";
-import { GEThistorialTransacciones, POSTtransaccion } from "../modulos/transacciones/midleware.transaccion.js";
+import { GETallTransacciones, GEThistorialTransacciones, POSTtransaccion } from "../modulos/transacciones/midleware.transaccion.js";
 import { GETHome } from "../modulos/home/index.js";
 import { validateAccountCreation, validateCardCreation } from '../middlewares/validationMiddleware.js';
 
@@ -35,4 +35,4 @@ routeglobal.route("/cuenta/:id/transacciones").get(GEThistorialTransacciones);
 routeglobal.route("/tarjetas").get(GETtarjetas).post(validateCardCreation, POSTtarjetas);
 routeglobal.route("/tarjetas/:numeroTarjeta").get(GETTitularTarjeta);
 
-routeglobal.route("/transaccion").get(GEThistorialTransacciones).post(POSTtransaccion);
+routeglobal.route("/transaccion").get(GETallTransacciones).post(POSTtransaccion);
