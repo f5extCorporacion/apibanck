@@ -35,6 +35,7 @@ const TransactionRepository = {
       where: { numeroTarjeta },
       select: {
         id: true,
+        numeroTarjeta: true, // Add this line to include the card number
         dineroTarjeta: true,
         cuentaId: true,
         status: true,
@@ -60,7 +61,7 @@ const TransactionRepository = {
       data: { dineroCuenta: { increment: monto } }
     });
 
-    // Update card balances
+    // Update card balances - ensure numeroTarjeta is available
     await tx.tarjeta.update({
       where: { numeroTarjeta: origen.numeroTarjeta },
       data: { dineroTarjeta: { decrement: monto } }
